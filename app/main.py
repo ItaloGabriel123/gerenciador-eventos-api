@@ -19,7 +19,7 @@ def listar_categorias(db: Session = Depends(get_db)):
 
 @app.post("/api/v1/usuarios", response_model=schemas.UsuarioResponse, status_code=201)
 def criar_usuario(usuario: schemas.UsuarioCreate, db: Session = Depends(get_db)):
-    # Em uma aplicação real, a senha receberia um hash (ex: bcrypt) antes de salvar
+
     db_usuario = models.Usuario(
         nome=usuario.nome,
         email=usuario.email,

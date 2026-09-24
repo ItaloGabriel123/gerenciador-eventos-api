@@ -22,3 +22,13 @@ pip install -r requirements.txt
 
 # Iniciar o servidor
 uvicorn app.main:app --reload
+
+Sempre que for rodar o projeto no seu computador (ambiente local), você precisará manter dois terminais abertos simultaneamente:
+
+Terminal 1 (Backend - FastAPI):
+uvicorn app.main:app --reload
+(Sobe o servidor da API em http://localhost:8000)
+
+Terminal 2 (Frontend - Streamlit):
+streamlit run app_frontend.py
+(Sobe a interface visual em http://localhost:8501)

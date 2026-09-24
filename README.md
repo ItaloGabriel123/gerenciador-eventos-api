@@ -1,4 +1,4 @@
-# API de Gerenciamento de Eventos Acadêmicos
+# API de Eventos Acadêmicos
 
 API RESTful desenvolvida com **FastAPI** e **SQLAlchemy** para gestão de eventos, inscrições e emissão de certificados.
 

@@ -9,8 +9,9 @@ class Usuario(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     nome = Column(String(100), nullable=False)
-    email = Column(String(100), unique=True, index=True, nullable=False)
-    senha = Column(String(255), nullable=False)
+    email = Column(String(150), unique=True, index=True, nullable=False)
+    senha_hash = Column(String(255), nullable=False)
+    perfil = Column(String(20), nullable=False, default="PARTICIPANTE")
 
     # Relacionamentos
     eventos = relationship("Evento", back_populates="organizador")
@@ -41,7 +42,7 @@ class Evento(Base):
     # Relacionamentos
     organizador = relationship("Usuario", back_populates="eventos")
     categoria = relationship("Categoria", back_populates="eventos")
-    inscricoes = relationship("Inscricao", back_populates="evento")
+    inscricoes = relationship("Inscricao", back_populates="inscricoes") if False else relationship("Inscricao", back_populates="evento")
 
 
 class Inscricao(Base):

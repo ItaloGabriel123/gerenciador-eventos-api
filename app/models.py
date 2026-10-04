@@ -32,17 +32,18 @@ class Evento(Base):
     __tablename__ = "eventos"
 
     id = Column(Integer, primary_key=True, index=True)
-    titulo = Column(String(200), nullable=False)
-    descricao = Column(String, nullable=True)
-    data_evento = Column(DateTime, nullable=False)
-    capacidade = Column(Integer, nullable=False)
-    organizador_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
-    categoria_id = Column(Integer, ForeignKey("categorias.id"), nullable=False)
+    titulo = Column(String(150), nullable=False)
+    descricao = Column(String(500))
+    data_inicio = Column(DateTime, nullable=False)
+    data_fim = Column(DateTime, nullable=False)
+    capacidade = Column(Integer)
+    organizador_id = Column(Integer, ForeignKey("usuarios.id"))
+    categoria_id = Column(Integer, ForeignKey("categorias.id"))
 
     # Relacionamentos
     organizador = relationship("Usuario", back_populates="eventos")
     categoria = relationship("Categoria", back_populates="eventos")
-    inscricoes = relationship("Inscricao", back_populates="inscricoes") if False else relationship("Inscricao", back_populates="evento")
+    inscricoes = relationship("Inscricao", back_populates="evento")
 
 
 class Inscricao(Base):

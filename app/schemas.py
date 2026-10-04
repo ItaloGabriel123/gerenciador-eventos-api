@@ -41,7 +41,8 @@ class UsuarioResponse(UsuarioBase):
 class EventoBase(BaseModel):
     titulo: str
     descricao: Optional[str] = None
-    data_evento: datetime
+    data_inicio: datetime
+    data_fim: datetime
     capacidade: int = Field(gt=0, description="Capacidade deve ser maior que zero")
     organizador_id: int
     categoria_id: int
@@ -52,7 +53,8 @@ class EventoCreate(EventoBase):
 class EventoUpdate(BaseModel):
     titulo: Optional[str] = None
     descricao: Optional[str] = None
-    data_evento: Optional[datetime] = None
+    data_inicio: Optional[datetime] = None
+    data_fim: Optional[datetime] = None
     capacidade: Optional[int] = Field(default=None, gt=0)
     organizador_id: Optional[int] = None
     categoria_id: Optional[int] = None

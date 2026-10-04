@@ -139,9 +139,14 @@ def deletar_usuario(usuario_id: int, db: Session = Depends(get_db)):
 # CREATE (POST)
 @app.post("/api/v1/eventos", response_model=schemas.EventoResponse, status_code=status.HTTP_201_CREATED)
 def criar_evento(evento: schemas.EventoCreate, db: Session = Depends(get_db)):
-    data_evento_naive = evento.data_evento.replace(tzinfo=None) if evento.data_evento.tzinfo else evento.data_evento
-    if data_evento_naive < datetime.utcnow():
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Não é permitido cadastrar evento com data passada.")
+    data_inicio_naive = evento.data_inicio.replace(tzinfo=None) if evento.data_inicio.tzinfo else evento.data_inicio
+    data_fim_naive = evento.data_fim.replace(tzinfo=None) if evento.data_fim.tzinfo else evento.data_fim
+
+    if data_inicio_naive < datetime.utcnow():
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Não é permitido cadastrar evento com data de início no passado.")
+
+    if data_fim_naive <= data_inicio_naive:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="A data de término deve ser posterior à data de início.")
 
     categoria = db.query(models.Categoria).filter(models.Categoria.id == evento.categoria_id).first()
     if not categoria:
@@ -182,10 +187,18 @@ def atualizar_evento(evento_id: int, evento_data: schemas.EventoUpdate, db: Sess
 
     update_data = evento_data.model_dump(exclude_unset=True)
 
-    if "data_evento" in update_data and update_data["data_evento"]:
-        data_naive = update_data["data_evento"].replace(tzinfo=None) if update_data["data_evento"].tzinfo else update_data["data_evento"]
-        if data_naive < datetime.utcnow():
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Não é permitido alterar a data para o passado.")
+    # Validar datas caso sejam enviadas
+    nova_inicio = update_data.get("data_inicio", db_evento.data_inicio)
+    nova_fim = update_data.get("data_fim", db_evento.data_fim)
+
+    if "data_inicio" in update_data or "data_fim" in update_data:
+        inicio_naive = nova_inicio.replace(tzinfo=None) if nova_inicio.tzinfo else nova_inicio
+        fim_naive = nova_fim.replace(tzinfo=None) if nova_fim.tzinfo else nova_fim
+
+        if inicio_naive < datetime.utcnow():
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Não é permitido alterar a data de início para o passado.")
+        if fim_naive <= inicio_naive:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="A data de término deve ser posterior à data de início.")
 
     for field, value in update_data.items():
         setattr(db_evento, field, value)

@@ -1,6 +1,13 @@
 from fastapi import FastAPI
 from core.configs import settings
 from api.v1.api import api_router
+from core.database import Base, engine
+
+# Importa todos os modelos para registrar na memória do SQLAlchemy
+import models 
+
+# Cria todas as tabelas no banco de dados (se ainda não existirem)
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title=settings.PROJECT_NAME)
 

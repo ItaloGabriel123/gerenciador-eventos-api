@@ -41,7 +41,10 @@ def get_usuario_logado(
 
 def verificar_perfis(perfis_permitidos: list[str]):
     def perfil_checker(usuario: Usuario = Depends(get_usuario_logado)) -> Usuario:
-        if usuario.perfil not in perfis_permitidos:
+        # Extrai o valor textual caso usuario.perfil seja um Enum do Python/SQLAlchemy
+        perfil_str = usuario.perfil.value if hasattr(usuario.perfil, "value") else str(usuario.perfil)
+        
+        if perfil_str not in perfis_permitidos:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Operação não permitida para o seu perfil de utilizador."

@@ -1,6 +1,6 @@
 import streamlit as st
 import requests
-import streamlit.components.v1 as components
+#import streamlit.components.v1 as components
 from datetime import datetime, time
 
 # Endereço base da API FastAPI
@@ -9,16 +9,14 @@ API_URL = "https://gerenciador-eventos-api-bs2c.onrender.com/api/v1"
 st.set_page_config(page_title="Gestão de Eventos Académicos", page_icon="🎓", layout="wide")
 
 # <-- NOVO: impede o Chrome de traduzir a página automaticamente
-components.html(
+st.html(
     """
     <script>
         const doc = window.parent.document;
-        doc.documentElement.setAttribute('lang', 'pt');
-        doc.documentElement.setAttribute('translate', 'no');
-        doc.body.classList.add('notranslate');
+        doc.documentElement.lang = 'pt-BR';
+        doc.documentElement.classList.add('notranslate');
     </script>
-    """,
-    height=0,
+    """
 )
 
 # Título Principal Global
@@ -30,19 +28,71 @@ menu = st.sidebar.selectbox(
     ["Categorias", "Utilizadores", "Eventos", "Inscrições", "Certificados"]
 )
 
-# Funções auxiliares para evitar erros visuais se a API estiver offline
-def safe_get(endpoint):
+# ---------------------------------------------------------
+# SISTEMA DE AUTENTICAÇÃO E CABEÇALHOS (HEADERS)
+# ---------------------------------------------------------
+# Formulário de Login na Barra Lateral
+st.sidebar.markdown("---")
+st.sidebar.subheader("🔐 Autenticação")
+
+if "token" not in st.session_state:
+    st.session_state["token"] = ""
+
+email_login = st.sidebar.text_input("E-mail para Login", key="login_email")
+senha_login = st.sidebar.text_input("Senha", type="password", key="login_pass")
+
+if st.sidebar.button("Entrar"):
     try:
-        res = requests.get(f"{API_URL}{endpoint}")
+        # O FastAPI OAuth2 espera os dados no formato form-data (username e password)
+        login_data = {"username": email_login, "password": senha_login}
+        res_login = requests.post(f"{API_URL}/auth/login", data=login_data)
+        
+        if res_login.status_code == 200:
+            token_data = res_login.json()
+            st.session_state["token"] = token_data.get("access_token")
+            st.sidebar.success("Autenticado com sucesso!")
+            st.rerun()
+        else:
+            st.sidebar.error("E-mail ou senha inválidos.")
+    except Exception as e:
+        st.sidebar.error("Erro ao conectar no login.")
+
+if st.session_state["token"]:
+    st.sidebar.info("🔑 Sessão Ativa")
+    if st.sidebar.button("Sair (Logout)"):
+        st.session_state["token"] = ""
+        # Limpa o texto dos campos de login na sessão
+        st.session_state["login_email"] = ""
+        st.session_state["login_pass"] = ""
+        st.rerun()
+
+# ---------------------------------------------------------
+# FUNÇÕES AUXILIARES COM TOKEN EMBUTIDO
+# ---------------------------------------------------------
+def safe_get(endpoint):
+    # LOCAL EXATO: Prepara os cabeçalhos enviando o Token JWT salvo na sessão
+    headers = {}
+    if st.session_state.get("token"):
+        headers["Authorization"] = f"Bearer {st.session_state['token']}"
+        
+    try:
+        res = requests.get(f"{API_URL}{endpoint}", headers=headers)
         if res.status_code == 200:
             return res.json()
+        elif res.status_code == 401:
+            st.warning("⚠️ Acesso não autorizado. Faça login na barra lateral.")
     except requests.exceptions.RequestException:
-        st.error("⚠️ Não foi possível conectar ao servidor backend (FastAPI na porta 8000).")
+        st.error("⚠️ Não foi possível conectar ao servidor backend.")
     return []
 
 def safe_post(endpoint, payload):
+    # LOCAL EXATO: Prepara os cabeçalhos enviando o Token JWT salvo na sessão
+    headers = {}
+    if st.session_state.get("token"):
+        headers["Authorization"] = f"Bearer {st.session_state['token']}"
+        
     try:
-        return requests.post(f"{API_URL}{endpoint}", json=payload)
+        return requests.post(f"{API_URL}{endpoint}", json=payload, headers=headers)
     except requests.exceptions.RequestException:
         st.error("⚠️ Erro de conexão com a API.")
         return None

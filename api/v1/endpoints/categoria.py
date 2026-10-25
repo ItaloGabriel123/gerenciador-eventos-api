@@ -13,7 +13,7 @@ router = APIRouter()
 def criar_categoria(
     categoria: CategoriaCreate, 
     db: Session = Depends(get_db),
-    _: Usuario = Depends(verificar_perfis(["ADMINISTRADOR"]))
+    _: Usuario = Depends(verificar_perfis(["ADMINISTRADOR", "ORGANIZADOR"]))  # <-- Atualizado aqui
 ):
     cat_existente = db.query(Categoria).filter(Categoria.nome == categoria.nome).first()
     if cat_existente:
@@ -41,7 +41,7 @@ def atualizar_categoria(
     categoria_id: int, 
     cat_data: CategoriaUpdate, 
     db: Session = Depends(get_db),
-    _: Usuario = Depends(verificar_perfis(["ADMINISTRADOR"]))
+    _: Usuario = Depends(verificar_perfis(["ADMINISTRADOR", "ORGANIZADOR"]))  # <-- Atualizado aqui
 ):
     db_cat = db.query(Categoria).filter(Categoria.id == categoria_id).first()
     if not db_cat:
@@ -56,7 +56,7 @@ def atualizar_categoria(
 def deletar_categoria(
     categoria_id: int, 
     db: Session = Depends(get_db),
-    _: Usuario = Depends(verificar_perfis(["ADMINISTRADOR"]))
+    _: Usuario = Depends(verificar_perfis(["ADMINISTRADOR", "ORGANIZADOR"]))  # <-- Atualizado aqui
 ):
     db_cat = db.query(Categoria).filter(Categoria.id == categoria_id).first()
     if not db_cat:

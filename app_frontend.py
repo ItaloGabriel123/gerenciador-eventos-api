@@ -4,7 +4,7 @@ import streamlit.components.v1 as components
 from datetime import datetime, time
 
 # Endereço base da API FastAPI
-API_URL = "http://localhost:8000/api/v1"
+API_URL = "https://gerenciador-eventos-api-bs2c.onrender.com/api/v1"
 
 st.set_page_config(page_title="Gestão de Eventos Académicos", page_icon="🎓", layout="wide")
 

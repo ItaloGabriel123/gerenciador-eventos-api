@@ -13,10 +13,11 @@ router = APIRouter()
 
 @router.post("/", response_model=CertificadoResponse, status_code=status.HTTP_201_CREATED)
 def emitir_certificado(
-    certificado: CertificadoCreate, 
+    certificado_data: CertificadoCreate,
     db: Session = Depends(get_db),
-    usuario_atual: Usuario = Depends(verificar_perfis(["ADMINISTRADOR", "ORGANIZADOR"]))
+    _: Usuario = Depends(verificar_perfis(["ADMINISTRADOR", "ORGANIZADOR"]))  # <-- Permitir ORGANIZADOR
 ):
+    # Lógica de emissão do certificado...
     inscricao = db.query(Inscricao).filter(Inscricao.id == certificado.inscricao_id).first()
     if not inscricao:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Inscrição não encontrada.")

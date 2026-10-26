@@ -38,7 +38,8 @@ def obter_usuario_logado(usuario_atual: Usuario = Depends(get_usuario_logado)):
 @router.get("/", response_model=List[UsuarioResponse])
 def listar_usuarios(
     db: Session = Depends(get_db),
-    _: Usuario = Depends(verificar_perfis(["ADMINISTRADOR", "ORGANIZADOR"]))  # <-- Permitir ORGANIZADOR
+    current_user: Usuario = Depends(get_usuario_logado) # <-- Troque verificar_perfis por get_usuario_logado
+    #_: Usuario = Depends(verificar_perfis(["ADMINISTRADOR", "ORGANIZADOR"]))  # <-- Permitir ORGANIZADOR
 ):
     return db.query(Usuario).all()
 

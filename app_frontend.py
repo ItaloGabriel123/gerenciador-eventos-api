@@ -31,12 +31,17 @@ menu = st.sidebar.selectbox(
 # ---------------------------------------------------------
 # SISTEMA DE AUTENTICAÇÃO E CABEÇALHOS (HEADERS)
 # ---------------------------------------------------------
-# Formulário de Login na Barra Lateral
 st.sidebar.markdown("---")
 st.sidebar.subheader("🔐 Autenticação")
 
 if "token" not in st.session_state:
     st.session_state["token"] = ""
+
+# Função executada via callback ANTES da renderização dos widgets na tela
+def resetar_sessao_logout():
+    st.session_state["token"] = ""
+    st.session_state["login_email"] = ""
+    st.session_state["login_pass"] = ""
 
 email_login = st.sidebar.text_input("E-mail para Login", key="login_email")
 senha_login = st.sidebar.text_input("Senha", type="password", key="login_pass")
@@ -59,12 +64,8 @@ if st.sidebar.button("Entrar"):
 
 if st.session_state["token"]:
     st.sidebar.info("🔑 Sessão Ativa")
-    if st.sidebar.button("Sair (Logout)"):
-        st.session_state["token"] = ""
-        # Limpa o texto dos campos de login na sessão
-        st.session_state["login_email"] = ""
-        st.session_state["login_pass"] = ""
-        st.rerun()
+    # O on_click dispara o reset das chaves antes do rerun da tela
+    st.sidebar.button("Sair (Logout)", on_click=resetar_sessao_logout)
 
 # ---------------------------------------------------------
 # FUNÇÕES AUXILIARES COM TOKEN EMBUTIDO

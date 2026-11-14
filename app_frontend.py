@@ -29,6 +29,37 @@ menu = st.sidebar.selectbox(
 )
 
 # ---------------------------------------------------------
+# FUNÇÕES AUXILIARES COM TOKEN EMBUTIDO
+# ---------------------------------------------------------
+def safe_get(endpoint):
+    # LOCAL EXATO: Prepara os cabeçalhos enviando o Token JWT salvo na sessão
+    headers = {}
+    if st.session_state.get("token"):
+        headers["Authorization"] = f"Bearer {st.session_state['token']}"
+        
+    try:
+        res = requests.get(f"{API_URL}{endpoint}", headers=headers)
+        if res.status_code == 200:
+            return res.json()
+        elif res.status_code == 401:
+            st.warning("⚠️ Acesso não autorizado. Faça login na barra lateral.")
+    except requests.exceptions.RequestException:
+        st.error("⚠️ Não foi possível conectar ao servidor backend.")
+    return []
+
+def safe_post(endpoint, payload):
+    # LOCAL EXATO: Prepara os cabeçalhos enviando o Token JWT salvo na sessão
+    headers = {}
+    if st.session_state.get("token"):
+        headers["Authorization"] = f"Bearer {st.session_state['token']}"
+        
+    try:
+        return requests.post(f"{API_URL}{endpoint}", json=payload, headers=headers)
+    except requests.exceptions.RequestException:
+        st.error("⚠️ Erro de conexão com a API.")
+        return None
+
+# ---------------------------------------------------------
 # SISTEMA DE AUTENTICAÇÃO E CABEÇALHOS (HEADERS)
 # ---------------------------------------------------------
 st.sidebar.markdown("---")
@@ -63,40 +94,13 @@ if st.sidebar.button("Entrar"):
         st.sidebar.error("Erro ao conectar no login.")
 
 if st.session_state["token"]:
-    st.sidebar.info("🔑 Sessão Ativa")
+    usuario_logado = safe_get("/usuarios/me")
+    if isinstance(usuario_logado, dict) and "nome" in usuario_logado:
+        st.sidebar.info(f"🔑 {usuario_logado['nome']} ({usuario_logado['perfil']})")
+    else:
+        st.sidebar.info("🔑 Sessão Ativa")
     # O on_click dispara o reset das chaves antes do rerun da tela
     st.sidebar.button("Sair (Logout)", on_click=resetar_sessao_logout)
-
-# ---------------------------------------------------------
-# FUNÇÕES AUXILIARES COM TOKEN EMBUTIDO
-# ---------------------------------------------------------
-def safe_get(endpoint):
-    # LOCAL EXATO: Prepara os cabeçalhos enviando o Token JWT salvo na sessão
-    headers = {}
-    if st.session_state.get("token"):
-        headers["Authorization"] = f"Bearer {st.session_state['token']}"
-        
-    try:
-        res = requests.get(f"{API_URL}{endpoint}", headers=headers)
-        if res.status_code == 200:
-            return res.json()
-        elif res.status_code == 401:
-            st.warning("⚠️ Acesso não autorizado. Faça login na barra lateral.")
-    except requests.exceptions.RequestException:
-        st.error("⚠️ Não foi possível conectar ao servidor backend.")
-    return []
-
-def safe_post(endpoint, payload):
-    # LOCAL EXATO: Prepara os cabeçalhos enviando o Token JWT salvo na sessão
-    headers = {}
-    if st.session_state.get("token"):
-        headers["Authorization"] = f"Bearer {st.session_state['token']}"
-        
-    try:
-        return requests.post(f"{API_URL}{endpoint}", json=payload, headers=headers)
-    except requests.exceptions.RequestException:
-        st.error("⚠️ Erro de conexão com a API.")
-        return None
 
 # ---------------------------------------------------------
 # 1. CATEGORIAS
@@ -233,6 +237,8 @@ elif menu == "Inscrições":
     col1, col2 = st.columns(2)
     
     usuarios = safe_get("/usuarios/")
+    if not usuarios and isinstance(usuario_logado, dict) and "id" in usuario_logado:
+        usuarios = [usuario_logado]
     eventos = safe_get("/eventos/")
     
     dict_users = {f"{u['nome']} ({u['email']})": u["id"] for u in usuarios if "nome" in u}

@@ -3,13 +3,17 @@ from core.configs import settings
 from api.v1.api import api_router
 from core.database import Base, engine
 
-# Importa todos os modelos para registrar na memória do SQLAlchemy
-import models 
+# Garante que todos os modelos sejam registados no metadata do SQLAlchemy
+import models._all_models
 
 # Cria todas as tabelas no banco de dados (se ainda não existirem)
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title=settings.PROJECT_NAME)
+
+@app.get("/", tags=["Status"])
+def health_check():
+    return {"status": "online", "projeto": settings.PROJECT_NAME}
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
 

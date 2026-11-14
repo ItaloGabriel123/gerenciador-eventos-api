@@ -15,25 +15,25 @@ router = APIRouter()
 def emitir_certificado(
     certificado_data: CertificadoCreate,
     db: Session = Depends(get_db),
-    _: Usuario = Depends(verificar_perfis(["ADMINISTRADOR", "ORGANIZADOR"]))  # <-- Permitir ORGANIZADOR
+    usuario_atual: Usuario = Depends(verificar_perfis(["ADMINISTRADOR", "ORGANIZADOR"]))
 ):
     # Lógica de emissão do certificado...
-    inscricao = db.query(Inscricao).filter(Inscricao.id == certificado.inscricao_id).first()
+    inscricao = db.query(Inscricao).filter(Inscricao.id == certificado_data.inscricao_id).first()
     if not inscricao:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Inscrição não encontrada.")
 
-    # Validation: O organizador só pode emitir certificado para o seu próprio evento
+    # O organizador só pode emitir certificado para o seu próprio evento
     if usuario_atual.perfil == "ORGANIZADOR" and inscricao.evento.organizador_id != usuario_atual.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permissão negada. Evento pertence a outro organizador.")
 
-    certificado_existente = db.query(Certificado).filter(Certificado.inscricao_id == certificado.inscricao_id).first()
+    certificado_existente = db.query(Certificado).filter(Certificado.inscricao_id == certificado_data.inscricao_id).first()
     if certificado_existente:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Certificado já emitido para esta inscrição.")
 
     codigo_unico = f"CERT-{uuid.uuid4().hex[:10].upper()}"
 
     db_certificado = Certificado(
-        inscricao_id=certificado.inscricao_id,
+        inscricao_id=certificado_data.inscricao_id,
         codigo_validacao=codigo_unico
     )
     db.add(db_certificado)
